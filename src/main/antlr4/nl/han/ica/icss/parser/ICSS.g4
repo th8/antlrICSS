@@ -35,7 +35,7 @@ WS: [ \t\r\n]+ -> skip;
 
 //--- PARSER: ---
 
-stylesheet: variableAssignment* stylerule+;
+stylesheet: (variableAssignment | stylerule)+ EOF;
 stylerule: selector OPEN_BRACE (stylerule | variableAssignment | declaration)+ CLOSE_BRACE;
 declaration: propertyName COLON (literal | variableReference | operation) SEMICOLON;
 selector: ID_IDENT | CLASS_IDENT | LOWER_IDENT;
