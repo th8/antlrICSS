@@ -3,11 +3,15 @@ package nl.han.ica.icss.checker;
 import java.util.HashMap;
 import java.util.LinkedList;
 
+import com.google.errorprone.annotations.Var;
 import nl.han.ica.icss.ast.*;
 import nl.han.ica.icss.ast.literals.ColorLiteral;
 import nl.han.ica.icss.ast.literals.PercentageLiteral;
 import nl.han.ica.icss.ast.literals.PixelLiteral;
 import nl.han.ica.icss.ast.literals.ScalarLiteral;
+import nl.han.ica.icss.ast.operations.AddOperation;
+import nl.han.ica.icss.ast.operations.MultiplyOperation;
+import nl.han.ica.icss.ast.operations.SubtractOperation;
 import nl.han.ica.icss.ast.types.*;
 
 public class Checker {
@@ -31,6 +35,7 @@ public class Checker {
             }
             else if(child instanceof Operation) {
                 checkOperationForColors((Operation) child);
+                checkOperationOperands((Operation) child);
             }
             else if(child instanceof Declaration) {
                 checkDeclaration((Declaration) child);
@@ -42,6 +47,8 @@ public class Checker {
 
         }
     }
+
+
 
 
     private void checkDeclaration(Declaration node) {
@@ -86,6 +93,65 @@ public class Checker {
             if(checkAssignment((VariableReference) node.rhs) == ExpressionType.COLOR) {
                 node.setError("Can't do an operation on colors");
             }
+        }
+    }
+
+    private void checkOperationOperands(Operation node) {
+        if(node instanceof AddOperation || node instanceof SubtractOperation) {
+            checkOperationSameOperandtypes(node);
+        }
+        else if(node instanceof MultiplyOperation) {
+            checkMultiplyOperandsScalar(node);
+        }
+    }
+
+    private void checkOperationSameOperandtypes(Operation node) {
+        ExpressionType lhsType = getExpressionType(node.lhs);
+        ExpressionType rhsType = getExpressionType(node.rhs);
+        System.out.println(lhsType + " " + rhsType);
+
+        //Set error if types don't match
+        if(lhsType != null && rhsType != null) {
+            if(lhsType != rhsType) {
+                node.setError("Non-matching types in add or substract operation");
+            }
+        }
+    }
+
+    private void checkMultiplyOperandsScalar(Operation node) {
+        ExpressionType lhsType = getExpressionType(node.lhs);
+        ExpressionType rhsType = getExpressionType(node.rhs);
+
+        if(lhsType != ExpressionType.SCALAR && rhsType != ExpressionType.SCALAR) {
+            node.setError("Non-scalar types in multiply operation");
+        }
+    }
+
+    private ExpressionType getExpressionType(Expression node) {
+        if(node instanceof VariableReference) {
+            return checkAssignment((VariableReference) node);
+        }
+        else if(node instanceof Literal) {
+            return getLiteralType((Literal) node);
+        }
+        return null;
+    }
+
+    private ExpressionType getLiteralType(Literal literal) {
+        if(literal instanceof ColorLiteral) {
+            return ExpressionType.COLOR;
+        }
+        else if(literal instanceof PercentageLiteral) {
+            return ExpressionType.PERCENTAGE;
+        }
+        else if(literal instanceof PixelLiteral) {
+            return ExpressionType.PIXEL;
+        }
+        else if(literal instanceof ScalarLiteral) {
+            return ExpressionType.SCALAR;
+        }
+        else {
+            return ExpressionType.UNDEFINED;
         }
     }
 
