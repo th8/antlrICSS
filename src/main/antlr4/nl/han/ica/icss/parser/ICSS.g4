@@ -37,11 +37,12 @@ WS: [ \t\r\n]+ -> skip;
 
 stylesheet: (variableAssignment | stylerule)+ EOF;
 stylerule: selector OPEN_BRACE (stylerule | variableAssignment | declaration)+ CLOSE_BRACE;
-declaration: propertyName COLON (literal | variableReference | operation) SEMICOLON;
+declaration: propertyName COLON expression SEMICOLON;
 selector: ID_IDENT | CLASS_IDENT | LOWER_IDENT;
 propertyName: LOWER_IDENT;
+expression: literal | variableReference | operation;
 literal: PIXELSIZE | PERCENTAGE | SCALAR | COLOR;
-operation: (literal | variableReference | multiplyOperation) ((PLUS | MIN) (literal | variableReference | multiplyOperation))*;
-multiplyOperation: (literal | variableReference) (MUL (literal | variableReference | multiplyOperation))*;
-variableAssignment: variableReference ASSIGNMENT_OPERATOR (literal | variableReference | operation) SEMICOLON;
+operation: (literal | variableReference | term) ((PLUS | MIN) (literal | variableReference | term | operation));
+term: (literal | variableReference) ((MUL) (literal | variableReference | term));
+variableAssignment: variableReference ASSIGNMENT_OPERATOR expression SEMICOLON;
 variableReference: CAPITAL_IDENT;

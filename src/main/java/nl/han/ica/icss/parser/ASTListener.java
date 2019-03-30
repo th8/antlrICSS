@@ -24,9 +24,13 @@ public class ASTListener extends ICSSBaseListener {
 	//Use this to keep track of the parent nodes when recursively traversing the ast
 	private Stack<ASTNode> currentContainer;
 
+	//Use this to keep track of the amount of operations pushed to the stack
+	private int operationCount;
+
 	public ASTListener() {
 		ast = new AST();
 		currentContainer = new Stack<>();
+		operationCount = 0;
 	}
 
 	@Override
@@ -38,17 +42,11 @@ public class ASTListener extends ICSSBaseListener {
 	}
 
 	@Override
-	public void enterStylerule(ICSSParser.StyleruleContext ctx) {
-		Stylerule rule = new Stylerule();
-		currentContainer.peek().addChild(rule);
-		currentContainer.push(rule);
-	}
-
-	@Override
-	public void exitStylerule(ICSSParser.StyleruleContext ctx) {
+	public void exitStylesheet(ICSSParser.StylesheetContext ctx) {
 		currentContainer.pop();
 	}
 
+	//Listen for Variable declarations and their references
 	@Override
 	public void enterVariableAssignment(ICSSParser.VariableAssignmentContext ctx) {
 		VariableAssignment assignment = new VariableAssignment();
@@ -66,6 +64,20 @@ public class ASTListener extends ICSSBaseListener {
 		VariableReference reference = new VariableReference(ctx.getText());
 		currentContainer.peek().addChild(reference);
 	}
+
+	//Listen for stylerules and their contents
+	@Override
+	public void enterStylerule(ICSSParser.StyleruleContext ctx) {
+		Stylerule rule = new Stylerule();
+		currentContainer.peek().addChild(rule);
+		currentContainer.push(rule);
+	}
+
+	@Override
+	public void exitStylerule(ICSSParser.StyleruleContext ctx) {
+		currentContainer.pop();
+	}
+
 
 	@Override
 	public void exitSelector(ICSSParser.SelectorContext ctx) {
@@ -120,15 +132,17 @@ public class ASTListener extends ICSSBaseListener {
 	public void enterOperation(ICSSParser.OperationContext ctx) {
 		Operation operation;
 		String operator = ctx.getChild(1).getText();
-		if(operator.equals("+")) {
+		if (operator.equals("+")) {
 			operation = new AddOperation();
-		} else if(operator.equals("*")) {
-			operation = new MultiplyOperation();
-		} else {
-			operation = new SubtractOperation();
+			currentContainer.peek().addChild(operation);
+			currentContainer.push(operation);
+			operationCount++;
+		} else if (operator.equals("-")) {
+			operation = operation = new SubtractOperation();
+			currentContainer.peek().addChild(operation);
+			currentContainer.push(operation);
+			operationCount++;
 		}
-		currentContainer.peek().addChild(operation);
-		currentContainer.push(operation);
 	}
 
 	@Override
@@ -137,14 +151,14 @@ public class ASTListener extends ICSSBaseListener {
 	}
 
 	@Override
-	public void enterMultiplyOperation(ICSSParser.MultiplyOperationContext ctx) {
+	public void enterTerm(ICSSParser.TermContext ctx) {
 		Operation operation = new MultiplyOperation();
 		currentContainer.peek().addChild(operation);
 		currentContainer.push(operation);
 	}
 
 	@Override
-	public void exitMultiplyOperation(ICSSParser.MultiplyOperationContext ctx) {
+	public void exitTerm(ICSSParser.TermContext ctx) {
 		currentContainer.pop();
 	}
 
