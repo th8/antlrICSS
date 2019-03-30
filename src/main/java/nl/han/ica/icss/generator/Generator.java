@@ -29,7 +29,7 @@ public class Generator {
 				stringBuilder.append("\t").append(printDeclaration((Declaration) child)).append(";\n");
 			}
 		}
-		stringBuilder.append("}\n");
+		stringBuilder.append("}\n\n");
 		return stringBuilder.toString();
 	}
 
@@ -79,11 +79,12 @@ public class Generator {
 	}
 
 	private String printPercentage(PercentageLiteral literal) {
-		return String.valueOf(literal.value);
+		return String.valueOf(literal.value + "%");
 	}
 
 	private String printPixel(PixelLiteral literal) {
-		return String.valueOf(literal.value);
+
+		return String.valueOf(literal.value + "px");
 	}
 
 	private String printScalar(ScalarLiteral literal) {

@@ -108,7 +108,6 @@ public class Checker {
     private void checkOperationSameOperandtypes(Operation node) {
         ExpressionType lhsType = getExpressionType(node.lhs);
         ExpressionType rhsType = getExpressionType(node.rhs);
-        System.out.println(lhsType + " " + rhsType);
 
         //Set error if types don't match
         if(lhsType != null && rhsType != null) {
